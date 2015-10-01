@@ -126,7 +126,7 @@
         if (pageStr != null) {
             start = (int) ((Integer.parseInt(pageStr) - 1) * (RegistryConstants.ITEMS_PER_PAGE * 1.5));
         } else {
-            start = 1;
+            start = 0;
         }
         PaginationContext.init(start, count, sortOrder, sortBy, Integer.MAX_VALUE);
         ManageGenericArtifactServiceClient client = new ManageGenericArtifactServiceClient(config, session);
@@ -295,7 +295,7 @@
 
             </form>
 
-            <form id="tempFilterForm" onKeydown="Javascript: if (event.keyCode==13) submitFilterForm();"
+            <form id="tempFilterForm" onKeydown="Javascript: if (event.keyCode==13) {submitFilterForm(); return false;}"
                   onsubmit="return submitFilterForm();" method="post">
 
 
@@ -316,7 +316,10 @@
 
                                     for (String field : keyList) {
                                         int lastIndex = field.lastIndexOf("_");
-                                        String name = field.substring(lastIndex+1);
+                                        String name = gen.getLabelValue(uiconfig,field);
+                                        if (name == null) {
+                                            name = field.substring(lastIndex+1);
+                                        }
                                 %>
 
                                 <option <%= ((request.getParameter("filterBy")!=null&&(request.getParameter("filterBy").equals(field)))?" selected ":"") %> value="<%=field%>"><%=name%></option>
@@ -635,7 +638,8 @@
                                 key="delete"/></a><% } %>
                             <a onclick="downloadDependencies('<%=artifact.getPath()%>')"  href="#"
                                 class="icon-link registryWriteOperation" style="background-image:url(../resources/images/icon-download.jpg);"><fmt:message key="download"/></a>
-
+                            <a  href="../../publisher/pages/impact?path=<%=URLEncoder.encode(artifact.getPath(), "UTF-8")%>"
+                                class="icon-link" style="background-image:url(../relations/images/dep-tree.gif);"><fmt:message key="impact.analysis"/></a>
                         </td>
                         <%
                         } else {

@@ -287,7 +287,7 @@ public class GenericUIGenerator {
                                 value, isReadOnly, tooltip, false, false);
                         table.append(dateField.generate());
                     } else if (UIGeneratorConstants.CHECKBOX_FIELD.equals(elementType)) {
-                        UIComponent checkBox  = new CheckBox(name, elementId, widgetName, value, tooltip, false, false);
+                        UIComponent checkBox  = new CheckBox(label,name, elementId, widgetName, value, tooltip, false, false);
                         table.append(checkBox.generate());
 
                     } else if (UIGeneratorConstants.OPTION_FIELD.equals(elementType)) {
@@ -715,7 +715,13 @@ public class GenericUIGenerator {
 
     private int handleCheckBox(int columns, String widgetName, StringBuilder table, int columnCount, OMElement inner,
                                OMElement arg, String tooltip) {
-        String name = arg.getFirstChildWithName(new QName(null, UIGeneratorConstants.ARGUMENT_NAME)).getText();
+        OMElement firstChildWithName = arg.getFirstChildWithName(new QName(null, UIGeneratorConstants.ARGUMENT_NAME));
+        String name = firstChildWithName.getText();
+        String label = firstChildWithName.getAttributeValue(new QName(UIGeneratorConstants.ARGUMENT_LABEL));
+
+        if (label == null) {
+            label = name;
+        }
         String optionValue = null;
         if (inner != null) {
             //if the element contains value is not null get the value
@@ -725,7 +731,7 @@ public class GenericUIGenerator {
             if (columnCount == 0) {
                 table.append("<tr>");
             }
-            UIComponent checkBox  = new CheckBox(name, null, widgetName, optionValue, tooltip, true, false);
+            UIComponent checkBox  = new CheckBox(label,name, null, widgetName, optionValue, tooltip, true, false);
             table.append(checkBox.generate());
             columnCount++;
             if (columnCount == columns) {
@@ -734,7 +740,7 @@ public class GenericUIGenerator {
             }
 
         } else {
-            UIComponent checkBox  = new CheckBox(name, null, widgetName, optionValue, tooltip, true, false);
+            UIComponent checkBox  = new CheckBox(label,name, null, widgetName, optionValue, tooltip, true, false);
             table.append(checkBox.generate());
         }
         return columnCount;
@@ -1084,6 +1090,7 @@ public class GenericUIGenerator {
         while (it.hasNext()) {
             OMElement widget = (OMElement) it.next();
             String widgetName = widget.getAttributeValue(new QName(null, UIGeneratorConstants.ARGUMENT_NAME));
+            boolean isUnboundedTable = UIGeneratorConstants.MAXOCCUR_UNBOUNDED.equals(widget.getAttributeValue(new QName(null, UIGeneratorConstants.MAXOCCUR_ELEMENT)));
             Iterator arguments = widget.getChildrenWithLocalName(UIGeneratorConstants.ARGUMENT_ELMENT);
             OMElement arg = null;
             while (arguments.hasNext()) {
@@ -1102,7 +1109,7 @@ public class GenericUIGenerator {
                                 Map<String, Object> map = new HashMap<String, Object>();
                                 List ids = new ArrayList<String>();
                                 ids.add(widgetName.replaceAll(" ",
-                                        "_") + "_" + name.replaceAll("" + " ", "-"));
+                                        "") + "_" + name.replaceAll("" + " ", "-"));
                                 ids.add(widgetName.replaceAll(" ", "_") + UIGeneratorConstants
                                         .TEXT_FIELD + "_" + name.replaceAll("" + " ", "-"));
                                 map.put("ids", ids);
@@ -1125,11 +1132,12 @@ public class GenericUIGenerator {
                         } else {
                             Map<String, Object> map = new HashMap<String, Object>();
                             List ids = new ArrayList<String>();
-                                ids.add(widgetName.replaceAll(" ", "_") + "_" + name.replaceAll("" +
+                                ids.add(widgetName.replaceAll(" ", "") + "_" + name.replaceAll("" +
                                     " ", "-"));
                             map.put("ids", ids);
                             map.put("name", name);
                             map.put("regexp", value);
+                            map.put("unboundedTable", isUnboundedTable);
                             res.add(map);
                         }
                     }
@@ -1189,6 +1197,37 @@ public class GenericUIGenerator {
             }
         }
         return id.toArray(new String[id.size()]);
+    }
+
+    public String getLabelValue(OMElement head, String feild) {
+        Iterator it = head.getChildrenWithName(new QName(UIGeneratorConstants.WIDGET_ELEMENT));
+
+        while (it.hasNext()) {
+            OMElement widget = (OMElement) it.next();
+            String widgetName = widget.getAttributeValue(new QName(null, UIGeneratorConstants.ARGUMENT_NAME));
+            Iterator arguments = widget.getChildrenWithLocalName(UIGeneratorConstants.ARGUMENT_ELMENT);
+            OMElement arg = null;
+
+            while (arguments.hasNext()) {
+                arg = (OMElement) arguments.next();
+                if (UIGeneratorConstants.ARGUMENT_ELMENT.equals(arg.getLocalName())) {
+                    String name =
+                            arg.getFirstChildWithName(new QName(null, UIGeneratorConstants.ARGUMENT_NAME)).getText();
+                    String key = widgetName.replaceAll(" ", "") + "_" + name.replaceAll(" ", "");
+                    if (feild.toLowerCase().equals(key.toLowerCase())) {
+                        String label = null;
+                        label = arg.getFirstChildWithName(new QName(null, UIGeneratorConstants.ARGUMENT_NAME))
+                                   .getAttributeValue(
+                                           new QName(UIGeneratorConstants.ARGUMENT_LABEL));
+                        if (label == null) {
+                            label = name;
+                        }
+                        return label;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public String[] getMandatoryNameList(OMElement head) {
@@ -1488,7 +1527,7 @@ public class GenericUIGenerator {
                         		
                             } else if (UIGeneratorConstants.CHECKBOX_FIELD.equals(elementType)) {
                             	
-                            	UIComponent checkBox  = new CheckBox(name, null, widgetName, null,tooltip,false,true);    	                        
+                            	UIComponent checkBox  = new CheckBox(name, name, null, widgetName, null,tooltip,false,true);
     	                        builder.append("theTd"+a+".innerHTML = '" + checkBox.generate() + "';");
     	                        
                             } else if (UIGeneratorConstants.OPTION_FIELD.equals(elementType)) {                          	
@@ -1544,16 +1583,36 @@ public class GenericUIGenerator {
                 	builder.append("theTddelete.innerHTML = td3Inner;");
                 	builder.append("theTr.appendChild(theTddelete);");
 
-
-                	builder.append("var elem=theTr.getElementsByTagName('*'), i=0, e;");
                 	builder.append("var dateArr = new Array();");
                 	builder.append("var dateArrSize = 0;");
-                	builder.append("for (var i = 0; i < elem.length; ++i) {");
 
-                	builder.append("if (elem[i].id) {var idNewValue = elem[i].id + '_' + "+widgetName+"Count;var jdateId = '#' + elem[i].id;if (theTr.innerHTML.indexOf(jdateId) !== -1) {dateArr[dateArrSize] = idNewValue;dateArrSize++;}var reg = new RegExp(elem[i].id.toLowerCase(), 'g');theTr.innerHTML = theTr.innerHTML.replace(reg,idNewValue);reg = new RegExp(elem[i].id, 'g');theTr.innerHTML = theTr.innerHTML.replace(reg, idNewValue);}");
-                	builder.append("if(elem[i].name){var idNewValue = elem[i].name +'_'+ "+widgetName+"Count;	elem[i].name = idNewValue;}");
+                    /*Following code segment contains a loop to make ids and names of elements appearing
+                    * in the row, unique.
+                    * The way they are made unique is for "_' + "+widgetName+"Count is appended
+                    * to each name and id.*/
 
+                	builder.append("jQuery('*',theTr).each(function(){");
+                    builder.append("var idAttr = jQuery(this).attr('id');");
+                    builder.append("if (typeof idAttr !== typeof undefined && idAttr !== false && idAttr != \"\") {");
+                    builder.append("idAttr = jQuery(this).attr('id') + '_' + ");
+                    builder.append(widgetName);
+                    builder.append("Count;");
+                    builder.append("var jdateId = '#' + jQuery(this).id;");
+                    builder.append("if (theTr.innerHTML.indexOf(jdateId) !== -1) {");
+                    builder.append("dateArr[dateArrSize] = idAttr;");
+                    builder.append("dateArrSize++;");
                     builder.append("}");
+                    builder.append("jQuery(this).attr('id',idAttr);");
+                    builder.append("}");
+                    builder.append("var nameAttr = jQuery(this).attr('name');");
+                    builder.append("if (typeof nameAttr !== typeof undefined && ");
+                    builder.append("nameAttr !== false && nameAttr != \"\") {");
+                    builder.append("nameAttr = jQuery(this).attr('name') +'_'+ ");
+                    builder.append(widgetName);
+                    builder.append("Count;");
+                    builder.append("jQuery(this).attr('name',nameAttr);");
+                    builder.append("}");
+                    builder.append("});");
 
                 	
                     builder.append("endpointMgt.appendChild(theTr);");

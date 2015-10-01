@@ -108,7 +108,7 @@
         if (pageStr != null) {
             start = (int) ((Integer.parseInt(pageStr) - 1) * (RegistryConstants.ITEMS_PER_PAGE * 1.5));
         } else {
-            start = 1;
+            start = 0;
         }
         PaginationContext.init(start, count, sortOrder, sortBy,1500);
         ManageGenericArtifactServiceClient client = new ManageGenericArtifactServiceClient(config, session);
@@ -276,7 +276,7 @@
             </form>
 
 
-            <form id="tempFilterForm" onKeydown="Javascript: if (event.keyCode==13) submitFilterForm();"
+            <form id="tempFilterForm" onKeydown="Javascript: if (event.keyCode==13) {submitFilterForm(); return false;}"
                   onsubmit="return submitFilterForm();" method="post">
                 <input type="hidden" name="singularLabel" value="<%=singularLabel%>"/>
                 <input type="hidden" name="pluralLabel" value="<%=pluralLabel%>"/>
@@ -484,6 +484,8 @@
                             <%} %>
                             <a onclick="downloadDependencies('<%=completePath%>')"  href="#"
                                class="icon-link registryWriteOperation" style="background-image:url(../resources/images/icon-download.jpg);"><fmt:message key="download"/></a>
+                            <a  href="../../publisher/pages/impact?path=<%=URLEncoder.encode(completePath, "UTF-8")%>"
+                                class="icon-link" style="background-image:url(../relations/images/dep-tree.gif);"><fmt:message key="impact.analysis"/></a>
 
                         </td>
                         <td><a title="<fmt:message key="dependency"/>" onclick="showAssociationTree('depends','<%=completePath%>')" href="#" class="icon-link" style="background-image:url(../relations/images/dep-tree.gif);"> <fmt:message key="view.dependency"/></a> </td>

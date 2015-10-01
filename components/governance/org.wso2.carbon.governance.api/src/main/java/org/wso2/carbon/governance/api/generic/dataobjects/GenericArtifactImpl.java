@@ -33,6 +33,7 @@ import java.lang.String;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Represents a generic governance artifact.
@@ -57,6 +58,15 @@ public class GenericArtifactImpl extends GovernanceArtifactImpl implements Gener
         this.mediaType = mediaType;
     }
 
+    protected GenericArtifactImpl(GovernanceArtifact artifact, String mediaType, List<String> uniqueAttributes) {
+        super((GovernanceArtifactImpl)artifact, uniqueAttributes);
+        this.qName = artifact.getQName();
+        setArtifactPath(((GovernanceArtifactImpl) artifact).getArtifactPath());
+        setLcName(((GovernanceArtifactImpl) artifact).getLcName());
+        setLcState(((GovernanceArtifactImpl) artifact).getLcState());
+        this.mediaType = mediaType;
+    }
+
     /**
      * Constructor accepting resource identifier and the qualified name.
      *
@@ -67,6 +77,23 @@ public class GenericArtifactImpl extends GovernanceArtifactImpl implements Gener
         super(id);
         this.qName = qName;
         this.mediaType = mediaType;
+    }
+
+    public GenericArtifactImpl(String id, QName qName, String mediaType, List<String> uniqueAttributes) {
+        this(id, qName, mediaType);
+        setUniqueAttributes(uniqueAttributes);
+    }
+
+
+    public GenericArtifactImpl(QName qName, String mediaType) {
+        super(UUID.randomUUID().toString());
+        this.qName = qName;
+        this.mediaType = mediaType;
+    }
+
+    public GenericArtifactImpl(QName qName, String mediaType, List<String> uniqueAttributes) {
+        this(qName, mediaType);
+        setUniqueAttributes(uniqueAttributes);
     }
 
     public byte[] getContent() {
