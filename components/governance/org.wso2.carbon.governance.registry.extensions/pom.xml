@@ -248,7 +248,7 @@
             <artifactId>jaxen</artifactId>
         </dependency>
         <dependency>
-            <groupId>xml-apis</groupId>
+            <groupId>xml-apis.wso2</groupId>
             <artifactId>xml-apis</artifactId>
         </dependency>
         <dependency>
